@@ -1,6 +1,8 @@
 from config import Config
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 import torch
+from transformers import pipeline
+from langchain.llms import HuggingFacePipeline
 
 
 def get_model(config: Config):
@@ -111,6 +113,21 @@ def get_model(config: Config):
         max_len = 2048
 
     else:
-        assert "Not implemented model (tokenizer and backbone)"
+        ValueError("Not implemented model (tokenizer and backbone)")
 
     return tokenizer, model, max_len
+
+
+def get_pipeline(model, tokenizer, max_len, config: Config):
+    pipe = pipeline(
+        task="text-generation",
+        model=model,
+        tokenizer=tokenizer,
+        pad_token_id=tokenizer.eos_token_id,
+        max_length=max_len,
+        temperature=config.temperature,
+        top_p=config.top_p,
+        repetition_penalty=config.repetition_penalty
+    )
+    llm = HuggingFacePipeline(pipeline=pipe)
+    return llm
