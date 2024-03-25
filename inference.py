@@ -41,7 +41,7 @@ if __name__ == '__main__':
     model.eval()
     llm = get_pipeline(model, tokenizer, max_len, args)
 
-    documents = load_data(args)
+    documents = load_data(args.PDFs_path)
     texts = text_split(args, documents)
 
     print(f"\n\nWe have created {len(texts)} chunks from {len(documents)} pages\n\n")
