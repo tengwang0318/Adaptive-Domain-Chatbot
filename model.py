@@ -1,11 +1,11 @@
-from config import Config
+import argparse
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 import torch
 from transformers import pipeline
 from langchain.llms import HuggingFacePipeline
 
 
-def get_model(config: Config):
+def get_model(config: argparse.PARSER):
     model = config.model_name
     print('\nDownloading model: ', model, '\n\n')
 
@@ -113,12 +113,12 @@ def get_model(config: Config):
         max_len = 2048
 
     else:
-        ValueError("Not implemented model (tokenizer and backbone)")
+        raise ValueError("Not implemented model (tokenizer and backbone)")
 
     return tokenizer, model, max_len
 
 
-def get_pipeline(model, tokenizer, max_len, config: Config):
+def get_pipeline(model, tokenizer, max_len, config: argparse.PARSER):
     pipe = pipeline(
         task="text-generation",
         model=model,

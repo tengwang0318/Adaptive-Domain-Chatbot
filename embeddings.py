@@ -1,12 +1,12 @@
+import argparse
 import os.path
 from langchain_community.embeddings import HuggingFaceInstructEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
-from config import Config
 import textwrap
 
 
-def generate_embeddings_from_datasets(config: Config, texts):
+def generate_embeddings_from_datasets(config: argparse.PARSER, texts):
     if config.embeddings_model_name == "all-MiniLM-L6-v2":
         model_name = "sentence-transformers/all-MiniLM-L6-v2"
     elif config.embeddings_model_name == "bge-large-en":
@@ -37,7 +37,7 @@ def generate_embeddings_from_datasets(config: Config, texts):
     return vectorDB
 
 
-def get_retriever(llm, vectorDB, PROMPT, config: Config):
+def get_retriever(llm, vectorDB, PROMPT, config: argparse.PARSER):
     retriever = vectorDB.as_retriever(search_kwargs={"k": config.K, "search_type": "similarity"})
     qa_chain = RetrievalQA.from_chain_type(
         llm=llm,
