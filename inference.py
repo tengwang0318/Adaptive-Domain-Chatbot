@@ -18,6 +18,8 @@ parser.add_argument("--K", type=int, default=6)
 parser.add_argument("--PDFs_path", type=str, default="dataset/")
 parser.add_argument("--embeddings_path", type=str, default="embeddings/")
 parser.add_argument("--output_folder", type=str, default="outputs/")
+parser.add_argument("--question_set_path", type=str, default="questions/QuestionSet1")
+parser.add_argument("--answer_path", type=str, default="answers/answers.txt")
 args = parser.parse_args()
 
 
@@ -36,6 +38,11 @@ def llm_ans(query, qa_chain):
     return ans + time_elapsed_str
 
 
+def read_question_set(file_path):
+    with open(file_path) as f:
+        return f.readlines()
+
+
 if __name__ == '__main__':
     tokenizer, model, max_len = get_model(args)
     model.eval()
@@ -51,11 +58,10 @@ if __name__ == '__main__':
 
     qa_chain = get_retriever(llm, vectordb, PROMPT, args)
 
-    while True:
-        query = input("Ask question! You could enter 'shitty project' to exit.")
-        if query != "shitty project":
-            print(llm_ans(query, qa_chain))
-        else:
-            break
-
-
+    question_set = read_question_set(args.question_set_path)
+    with open(args.answer_path, 'w') as f:
+        for query in question_set:
+            result = llm_ans(query, qa_chain)
+            f.write(result)
+            print(result)
+            print("\n\n----------------------------------------------------\n\n")

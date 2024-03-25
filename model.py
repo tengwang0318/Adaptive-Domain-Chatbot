@@ -2,7 +2,7 @@ import argparse
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 import torch
 from transformers import pipeline
-from langchain.llms import HuggingFacePipeline
+from langchain_community.llms import HuggingFacePipeline
 
 
 def get_model(config: argparse.PARSER):
