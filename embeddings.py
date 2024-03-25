@@ -25,7 +25,7 @@ def generate_embeddings_from_datasets(config: argparse.PARSER, texts):
             documents=texts,
             embedding=embeddings
         )
-        vectorDB.save(f"{config.embeddings_path}/{config.embeddings_model_name}")
+        vectorDB.save_local(f"{config.embeddings_path}/{config.embeddings_model_name}")
 
     else:
         embeddings = HuggingFaceInstructEmbeddings(
