@@ -23,7 +23,7 @@ def generate_embeddings_from_datasets(config: argparse.PARSER, texts):
         )
         vectorDB = FAISS.from_documents(
             documents=texts,
-            embeddings=embeddings
+            embedding=embeddings
         )
         vectorDB.save(f"{config.embeddings_path}/{config.embeddings_model_name}")
 
