@@ -25,6 +25,7 @@ def text_split(config, documents):
     return texts
 
 
+
 if __name__ == '__main__':
     import time
 

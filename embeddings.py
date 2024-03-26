@@ -6,7 +6,7 @@ from langchain.chains import RetrievalQA
 import textwrap
 
 
-def generate_embeddings_from_datasets(config: argparse.PARSER, texts):
+def generate_embeddings_from_datasets(config: argparse.PARSER, texts=None):
     if config.embeddings_model_name == "all-MiniLM-L6-v2":
         model_name = "sentence-transformers/all-MiniLM-L6-v2"
     elif config.embeddings_model_name == "bge-large-en":
