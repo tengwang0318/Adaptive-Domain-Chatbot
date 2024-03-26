@@ -27,6 +27,11 @@ def parser_all_questions():
     for file_path in get_all_files_path("MedQuAD-master"):
         # print(file_path)
         all_questions.extend(xml_parser(file_path))
+
+    if not os.path.exists("all_query.txt"):
+        with open("all_query.txt", "w") as f:
+            for question in all_questions:
+                f.writelines(question + '\n')
     return all_questions
 
 
