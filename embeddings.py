@@ -32,7 +32,8 @@ def generate_embeddings_from_datasets(config: argparse.PARSER, texts=None):
             model_name=model_name,
             model_kwargs={"device": "cuda"}
         )
-        vectorDB = FAISS.load_local(f"{config.embeddings_path}/{config.embeddings_model_name}", embeddings)
+        vectorDB = FAISS.load_local(f"{config.embeddings_path}/{config.embeddings_model_name}", embeddings, embeddings,
+                                    allow_dangerous_deserialization=True)
 
     return vectorDB
 
