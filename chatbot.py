@@ -1,7 +1,6 @@
 import locale
 import gradio as gr
 import time
-import argparse
 from model import get_model, get_pipeline
 from data_preprocess import load_data, text_split
 from embeddings import generate_embeddings_from_datasets, get_retriever, process_llm_response
@@ -47,8 +46,9 @@ def predict(message, history):
 
 demo = gr.ChatInterface(
     predict,
-    title=f' Open-Source LLM ({config.model_name}) for Harry Potter Question Answering'
+    title=f' Open-Source LLM ({config.model_name}) for Health Care'
 )
 
 demo.queue()
 demo.launch()
+
