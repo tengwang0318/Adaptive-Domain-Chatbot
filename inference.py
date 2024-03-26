@@ -8,7 +8,7 @@ from prompts import generate_prompts
 parser = argparse.ArgumentParser()
 # 'llama2-13b-chat'  # wizardlm, llama2-7b-chat, llama2-13b-chat, mistral-7B
 parser.add_argument("--model_name", type=str, default='llama2-13b-chat')
-parser.add_argument("--temperature", type=float, default=0)
+parser.add_argument("--temperature", type=float, default=1)
 parser.add_argument("--top_p", type=float, default=0.95)
 parser.add_argument("--repetition_penalty", type=float, default=1.15)
 parser.add_argument("--split_chunk_size", type=int, default=800)
