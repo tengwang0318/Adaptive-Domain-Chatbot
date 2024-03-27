@@ -2,7 +2,7 @@ import time
 import argparse
 from model import get_model, get_pipeline
 from data_preprocess import load_data, text_split
-from embeddings import generate_embeddings_from_datasets, get_retriever, process_llm_response
+from generate_embeddings import generate_embeddings_from_datasets, get_retriever, process_llm_response
 from prompts import generate_prompts
 
 parser = argparse.ArgumentParser()

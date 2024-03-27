@@ -28,8 +28,8 @@ def parser_all_questions():
         # print(file_path)
         all_questions.extend(xml_parser(file_path))
 
-    if not os.path.exists("all_query.txt"):
-        with open("all_query.txt", "w") as f:
+    if not os.path.exists("generate_classification_data/all_query.txt"):
+        with open("generate_classification_data/all_query.txt", "w") as f:
             for question in all_questions:
                 f.writelines(question + '\n')
     return all_questions

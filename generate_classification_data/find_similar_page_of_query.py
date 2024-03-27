@@ -1,9 +1,7 @@
 import csv
 import os.path
-
-from embeddings import generate_embeddings_from_datasets
+from .helper import generate_embeddings_from_datasets, load_data, text_split
 import argparse
-from data_preprocess import load_data, text_split
 from XML_parser import parser_all_questions
 from collections import Counter
 
@@ -90,29 +88,31 @@ def get_category(page: int):
 
 
 if __name__ == "__main__":
-    documents = load_data(args.PDFs_path)
-    texts = text_split(args, documents)
+    if not os.path.exists(f'{args.embeddings_path}/{args.embeddings_model_name}/index.faiss'):
+        documents = load_data(args.PDFs_path)
+        texts = text_split(args, documents)
 
-    print(f"\n\nWe have created {len(texts)} chunks from {len(documents)} pages\n\n")
+        print(f"\n\nWe have created {len(texts)} chunks from {len(documents)} pages\n\n")
 
-    vectorDB = generate_embeddings_from_datasets(args, texts)
-    if os.path.exists("all_query.txt"):
-        with open("all_query.txt") as f:
+    vectorDB = generate_embeddings_from_datasets(args, texts=None)
+    if os.path.exists("generate_classification_data/all_query.txt"):
+        with open("generate_classification_data/all_query.txt") as f:
             all_questions = list(map(lambda x: x.strip(), f.readlines()))
     else:
         all_questions = parser_all_questions()
-    # print(all_questions)
+    print(f'there are {len(all_questions)} questions')
     categories, idxes = [], []
-    for question in all_questions:
+    for idx, question in enumerate(all_questions):
         counter = Counter()
+        if idx % 1000 == 0:
+            print(idx)
         for question_info in vectorDB.similarity_search(question, k=5):
             category, idx = get_category(question_info.metadata['page'])
             counter[(category, idx)] += 1
-        most_comon_category, most_common_idx = counter.most_common(1)[0]
+        most_comon_category, most_common_idx = counter.most_common(1)[0][0]
         categories.append(most_comon_category)
         idxes.append(most_common_idx)
     with open("question_label_data_pair.csv", 'w') as f:
         writer = csv.writer(f)
         for question, idx, category in zip(all_questions, idxes, categories):
             writer.writerow([question, idx, category])
-
