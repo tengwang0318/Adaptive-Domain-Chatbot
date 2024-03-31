@@ -1,7 +1,7 @@
 import time
 import argparse
 from model import get_model, get_pipeline
-from data_preprocess import load_data, text_split
+from data_preprocess import load_data_in_folder, text_split
 from generate_embeddings import generate_embeddings_from_datasets, get_retriever, process_llm_response
 from prompts import generate_prompts
 
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     model.eval()
     llm = get_pipeline(model, tokenizer, max_len, args)
 
-    documents = load_data(args.PDFs_path)
+    documents = load_data_in_folder(args.PDFs_path)
     texts = text_split(args, documents)
 
     print(f"\n\nWe have created {len(texts)} chunks from {len(documents)} pages\n\n")

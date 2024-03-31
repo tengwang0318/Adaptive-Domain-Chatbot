@@ -127,7 +127,8 @@ def get_pipeline(model, tokenizer, max_len, config: argparse.PARSER):
         max_length=max_len,
         temperature=config.temperature,
         top_p=config.top_p,
-        repetition_penalty=config.repetition_penalty
+        repetition_penalty=config.repetition_penalty,
+        do_sample=True
     )
     llm = HuggingFacePipeline(pipeline=pipe)
     return llm

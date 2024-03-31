@@ -1,16 +1,15 @@
-from model import get_model, get_pipeline
-from generate_embeddings import load_and_generate_embeddings_per_chapter, get_retriever, process_llm_response, \
-    process_llm_response_for_chatbot
-from prompts import generate_prompts
-import argparse
-from classify_inference import llm_ans
-from text_classification.predict import predict
-import gradio as gr
+import os.path
 import time
+import argparse
+from model import get_model, get_pipeline
+from data_preprocess import load_data_in_folder, load_data_in_file, text_split
+from generate_embeddings import process_llm_response, load_and_generate_embeddings_per_chapter, get_retriever
+from prompts import generate_prompts
+from text_classification.predict import predict
 
 parser = argparse.ArgumentParser()
 # 'llama2-13b-chat'  # wizardlm, llama2-7b-chat, llama2-13b-chat, mistral-7B
-parser.add_argument("--model_name", type=str, default='phi-2')
+parser.add_argument("--model_name", type=str, default='llama2-13b-chat')
 parser.add_argument("--temperature", type=float, default=1)
 parser.add_argument("--top_p", type=float, default=0.95)
 parser.add_argument("--repetition_penalty", type=float, default=1.15)
@@ -24,24 +23,25 @@ parser.add_argument("--embeddings_path", type=str, default="embeddings_per_chapt
 args = parser.parse_args()
 
 
-def llm_ans_for_chatbot(query, qa_chain):
+def llm_ans(query, qa_chain):
     start = time.time()
     llm_response = qa_chain.invoke(query)
-    qa, related_material = process_llm_response_for_chatbot(llm_response)
+    ans = process_llm_response(llm_response)
 
     end = time.time()
 
     time_elapsed = int(round(end - start, 0))
     time_elapsed_str = f'\n\nTime elapsed: {time_elapsed} s'
-    return qa + time_elapsed_str, related_material
+    return ans + time_elapsed_str
 
 
-def process_query(query):
+if __name__ == '__main__':
+    query = input("Enter your query: ")
     predicted_category = predict(query)
-    category_message = (f"Your query belongs to {predicted_category}。\nThen it will "
-                        f"redirect into {predicted_category} knowledge base.")
+    print(f"You query belongs to {predicted_category}.\nIt will redirect to {predicted_category} knowledge bases.")
 
     vectordb = load_and_generate_embeddings_per_chapter(args, predicted_category)
+
 
     tokenizer, model, max_len = get_model(args)
     model.eval()
@@ -50,19 +50,5 @@ def process_query(query):
     PROMPT = generate_prompts()
 
     qa_chain = get_retriever(llm, vectordb, PROMPT, args)
-    qa, related_material = llm_ans_for_chatbot(query, qa_chain)
-
-    return category_message, qa, related_material
-
-
-iface = gr.Interface(
-    fn=process_query,
-    inputs="text",
-    outputs=[gr.components.Textbox(label="Category"),
-             gr.components.Textbox(label="Question & Answer"),
-             gr.components.Textbox(label="Source")],
-    title="health care chatbot",
-    description="enter your query, then we will give you some suggestions!"
-)
-
-iface.launch(share=True)
+    result = llm_ans(query, qa_chain)
+    print(result)

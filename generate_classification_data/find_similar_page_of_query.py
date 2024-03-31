@@ -1,8 +1,8 @@
 import csv
 import os.path
-from helper import generate_embeddings_from_datasets, load_data, text_split
+from .helper import generate_embeddings_from_datasets, load_data, text_split
 import argparse
-from XML_parser import parser_all_questions
+from .XML_parser import parser_all_questions
 from collections import Counter
 
 parser = argparse.ArgumentParser()
