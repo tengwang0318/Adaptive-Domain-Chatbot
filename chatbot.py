@@ -17,7 +17,7 @@ parser.add_argument("--repetition_penalty", type=float, default=1.15)
 parser.add_argument("--split_chunk_size", type=int, default=800)
 parser.add_argument("--split_overlap", type=int, default=100)
 parser.add_argument("--embeddings_model_name", type=str, default="all-MiniLM-L6-v2")
-parser.add_argument("--K", type=int, default=4)
+parser.add_argument("--K", type=int, default=3)
 parser.add_argument("--PDFs_path", type=str, default="dataset_per_chapter/")
 parser.add_argument("--embeddings_path", type=str, default="embeddings_per_chapter/")
 
@@ -36,10 +36,15 @@ def llm_ans_for_chatbot(query, qa_chain):
     return qa + time_elapsed_str, related_material
 
 
+def reduce_and_make_space(text):
+    text = text.replace('\n', ' ')
+    idx = text.index("Answer:")
+    return text[:idx] + "\n\n" + text[idx:]
+
+
 def process_query(query):
     predicted_category = predict(query)
-    category_message = (f"Your query belongs to {predicted_category}。\nThen it will "
-                        f"redirect into {predicted_category} knowledge base.")
+    category_message = f"Your query belongs to {predicted_category}。\nThen it will redirect into {predicted_category} knowledge base."
 
     vectordb = load_and_generate_embeddings_per_chapter(args, predicted_category)
 
@@ -51,18 +56,19 @@ def process_query(query):
 
     qa_chain = get_retriever(llm, vectordb, PROMPT, args)
     qa, related_material = llm_ans_for_chatbot(query, qa_chain)
-
+    qa = reduce_and_make_space(qa)
     return category_message, qa, related_material
 
 
-iface = gr.Interface(
-    fn=process_query,
-    inputs="text",
-    outputs=[gr.components.Textbox(label="Category"),
-             gr.components.Textbox(label="Question & Answer"),
-             gr.components.Textbox(label="Source")],
-    title="health care chatbot",
-    description="enter your query, then we will give you some suggestions!"
-)
+if __name__ == "__main__":
+    iface = gr.Interface(
+        fn=process_query,
+        inputs="text",
+        outputs=[gr.components.Textbox(label="Category"),
+                 gr.Textbox(label="Question & Answer", style={"height": "200px", "width": "100%"}),
+                 gr.Textbox(label="Source", style={"height": "100px", "width": "100%"})],
+        title="health care chatbot",
+        description="enter your query, then we will give you some suggestions!"
+    )
 
-iface.launch(share=True)
+    iface.launch(share=True)
