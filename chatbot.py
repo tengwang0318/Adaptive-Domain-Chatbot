@@ -22,6 +22,7 @@ parser.add_argument("--PDFs_path", type=str, default="dataset_per_chapter/")
 parser.add_argument("--embeddings_path", type=str, default="embeddings_per_chapter/")
 
 args = parser.parse_args()
+RELATED_MATERIAL = None
 
 
 def llm_ans_for_chatbot(query, qa_chain):
@@ -42,33 +43,39 @@ def reduce_and_make_space(text):
     return text[:idx] + "\n\n" + text[idx:]
 
 
-def process_query(query):
-    predicted_category = predict(query)
-    category_message = f"Your query belongs to {predicted_category}。\nThen it will redirect into {predicted_category} knowledge base."
+def process_query(query, history):
+    global RELATED_MATERIAL
+    if query == "GIVE ME THE SOURCE!":
+        if RELATED_MATERIAL:
+            yield RELATED_MATERIAL
 
-    vectordb = load_and_generate_embeddings_per_chapter(args, predicted_category)
+        else:
+            yield "There doesn't have any query before, please ask question firstly!"
+    else:
+        predicted_category = predict(query)
+        category_message = (f"Your query belongs to {predicted_category}. "
+                            f"Then it will redirect into {predicted_category} knowledge base.\n")
+        message = category_message
+        category_message = category_message + "Hold on one second."
 
-    tokenizer, model, max_len = get_model(args)
-    model.eval()
-    llm = get_pipeline(model, tokenizer, max_len, args)
+        yield category_message
 
-    PROMPT = generate_prompts()
+        vectordb = load_and_generate_embeddings_per_chapter(args, predicted_category)
 
-    qa_chain = get_retriever(llm, vectordb, PROMPT, args)
-    qa, related_material = llm_ans_for_chatbot(query, qa_chain)
-    qa = reduce_and_make_space(qa)
-    return category_message, qa, related_material
+        tokenizer, model, max_len = get_model(args)
+        model.eval()
+        llm = get_pipeline(model, tokenizer, max_len, args)
+
+        PROMPT = generate_prompts()
+
+        qa_chain = get_retriever(llm, vectordb, PROMPT, args)
+        qa, related_material = llm_ans_for_chatbot(query, qa_chain)
+        RELATED_MATERIAL = related_material
+        qa = reduce_and_make_space(qa)
+        message = message + qa
+        yield message +  "\nIf you want to find the source, just type 'GIVE ME THE SOURCE!'"
+        history.append([query, message])
 
 
 if __name__ == "__main__":
-    iface = gr.Interface(
-        fn=process_query,
-        inputs="text",
-        outputs=[gr.components.Textbox(label="Category"),
-                 gr.Textbox(label="Question & Answer", style={"height": "200px", "width": "100%"}),
-                 gr.Textbox(label="Source", style={"height": "100px", "width": "100%"})],
-        title="health care chatbot",
-        description="enter your query, then we will give you some suggestions!"
-    )
-
-    iface.launch(share=True)
+    gr.ChatInterface(process_query).launch(share=True)

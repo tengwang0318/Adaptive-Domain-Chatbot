@@ -1,10 +1,13 @@
+import time
 import gradio as gr
 
 
-def greet(name):
-    return "Hello " + name + "!"
+def slow_echo(message, history):
+    yield "312"
+    history.append([message, "312"])
+    time.sleep(5)
+    yield "312312"
+    history.append([message, "312312"])
 
 
-demo = gr.Interface(fn=greet, inputs="textbox", outputs="textbox")
-
-demo.launch(share=True)  # Share your demo with just 1 extra parameter 🚀
+gr.ChatInterface(slow_echo).launch()
