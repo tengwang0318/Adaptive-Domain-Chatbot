@@ -1,13 +1,20 @@
-import time
 import gradio as gr
 
+def markdown_response(message, history):
+    # Generates a Markdown formatted response
+    # For this demo, history is not used, but you must accept it as a parameter.
+    text = """
+    ```
+    copy me !!!
+    ```"""
+    return text
 
-def slow_echo(message, history):
-    yield "312"
-    history.append([message, "312"])
-    time.sleep(5)
-    yield "312312"
-    history.append([message, "312312"])
+# Create a ChatInterface, the fn function returns text formatted with Markdown
+chat = gr.ChatInterface(
+    fn=markdown_response,
+    title="Markdown Chat Interface",
+    description="This chat interface supports Markdown formatted output."
+)
 
-
-gr.ChatInterface(slow_echo).launch()
+# Launch the interface with share=True to create a shareable public link
+chat.launch(share=True)

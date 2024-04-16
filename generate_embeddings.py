@@ -5,6 +5,56 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 import textwrap
 from data_preprocess import load_data_in_file, text_split
+import faiss
+from sentence_transformers import SentenceTransformer
+
+
+def next_question_prediction(config: argparse.PARSER, query):
+    if config.embeddings_model_name == "all-MiniLM-L6-v2":
+        model_name = "sentence-transformers/all-MiniLM-L6-v2"
+        dimension = 384
+    elif config.embeddings_model_name == "bge-large-en":
+        model_name = "BAAI/bge-large-en"
+        dimension = 1024
+    elif config.embeddings_model_name == "bge-m3":
+        model_name = "BAAI/bge-m3"
+        dimension = 1024
+    else:
+        raise ValueError("Wrong embedding models")
+
+    queries = []
+    with open("generate_classification_data/all_query.txt") as f:
+        for line in f.readlines():
+            queries.append(line.replace('\n', ""))
+
+    if os.path.exists(f"{config.next_question_predictions_path}/{config.embeddings_model_name}/index.faiss"):
+        index = faiss.read_index(f"{config.next_question_predictions_path}/{config.embeddings_model_name}/index.faiss")
+    else:
+
+        model = SentenceTransformer(model_name)
+        embeddings = model.encode(queries)
+
+        nlist = 50
+        M = 4
+        nbits = 8
+
+        quantizer = faiss.IndexFlatL2(dimension)
+        index = faiss.IndexIVFPQ(quantizer, dimension, nlist, M, nbits)
+        index.train(embeddings)
+        index.add(embeddings)
+
+        faiss.write_index(index, f"{config.next_question_predictions_path}{config.embeddings_model_name}/index.faiss")
+
+    model = SentenceTransformer(model_name)
+    query_embedding = model.encode([query])
+
+    k = config.number_of_question
+    index.nprobe = 10
+    D, I = index.search(query_embedding, k)
+
+    closest_queries = set([queries[i] for i in I[0]])
+
+    return "\n".join(f"```\n{query}\n```" for query in closest_queries)
 
 
 def generate_embeddings_from_datasets(config: argparse.PARSER, texts=None):

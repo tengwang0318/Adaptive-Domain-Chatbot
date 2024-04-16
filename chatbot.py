@@ -1,12 +1,14 @@
 from model import get_model, get_pipeline
 from generate_embeddings import load_and_generate_embeddings_per_chapter, get_retriever, process_llm_response, \
-    process_llm_response_for_chatbot
+    process_llm_response_for_chatbot, next_question_prediction
+
 from prompts import generate_prompts
 import argparse
 from classify_inference import llm_ans
 from text_classification.predict import predict
 import gradio as gr
 import time
+import faiss
 
 parser = argparse.ArgumentParser()
 # 'llama2-13b-chat'  # wizardlm, llama2-7b-chat, llama2-13b-chat, mistral-7B
@@ -20,6 +22,8 @@ parser.add_argument("--embeddings_model_name", type=str, default="all-MiniLM-L6-
 parser.add_argument("--K", type=int, default=3)
 parser.add_argument("--PDFs_path", type=str, default="dataset_per_chapter/")
 parser.add_argument("--embeddings_path", type=str, default="embeddings_per_chapter/")
+parser.add_argument("--next_question_predictions_path", type=str, default="next_question_predictions/")
+parser.add_argument("--number_of_question", type=int, default=5)
 
 args = parser.parse_args()
 RELATED_MATERIAL = None
@@ -53,8 +57,8 @@ def process_query(query, history):
             yield "There doesn't have any query before, please ask question firstly!"
     else:
         predicted_category = predict(query)
-        category_message = (f"Your query belongs to {predicted_category}. "
-                            f"Then it will redirect into {predicted_category} knowledge base.\n")
+        category_message = (f"Your query belongs to **{predicted_category}**. "
+                            f"Then it will redirect into **{predicted_category}** knowledge base.\n\n")
         message = category_message
         category_message = category_message + "Hold on one second."
 
@@ -73,7 +77,12 @@ def process_query(query, history):
         RELATED_MATERIAL = related_material
         qa = reduce_and_make_space(qa)
         message = message + qa
-        yield message +  "\nIf you want to find the source, just type 'GIVE ME THE SOURCE!'"
+
+        message = message + "\n\nIf you want to find the source, just type \n```GIVE ME THE SOURCE!```\n\nYou might be interested in the following questions:\n"
+
+        message = message + next_question_prediction(args, query)
+
+        yield message
         history.append([query, message])
 
 
