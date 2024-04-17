@@ -32,6 +32,14 @@ The whole workflow diagram is as follows:
 
 ![workflow](imgs/workflow.png)
 
+Firstly, you should train a text classification model by running the following command:
+
+```
+python text_classification/train.py
+```
+
+
+
 To boost the chatbot, just execute:
 
 ```shell
